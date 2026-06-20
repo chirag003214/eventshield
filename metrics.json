@@ -1,0 +1,65 @@
+{
+  "long_duration": {
+    "roc_auc": 0.8826,
+    "pr_auc": 0.7678,
+    "f1": 0.7357,
+    "positive_rate": 0.293,
+    "n": 2993
+  },
+  "high_impact": {
+    "roc_auc": 0.8723,
+    "pr_auc": 0.8263,
+    "f1": 0.7761,
+    "positive_rate": 0.3695,
+    "n": 2993,
+    "feature_importance": [
+      [
+        "veh_enc",
+        0.5948
+      ],
+      [
+        "latitude",
+        0.1319
+      ],
+      [
+        "longitude",
+        0.1133
+      ],
+      [
+        "cause_enc",
+        0.0506
+      ],
+      [
+        "hour",
+        0.036
+      ],
+      [
+        "stat_enc",
+        0.0327
+      ],
+      [
+        "corr_enc",
+        0.0183
+      ],
+      [
+        "dow",
+        0.0178
+      ],
+      [
+        "is_night",
+        0.0027
+      ],
+      [
+        "is_weekend",
+        0.0021
+      ]
+    ]
+  },
+  "event_forecast": {
+    "mae": 2.392,
+    "r2": 0.4652,
+    "baseline_mae": 3.739,
+    "improvement_pct": 36.0,
+    "n": 1465
+  }
+}
