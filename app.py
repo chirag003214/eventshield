@@ -20,16 +20,66 @@ warnings.filterwarnings('ignore')
 st.set_page_config(page_title="EventShield — Traffic Intelligence",
                    page_icon="🛡️", layout="wide", initial_sidebar_state="expanded")
 
-st.markdown("""
+# ── Brand palette (civic / traffic-tech, ocean-blue) ──
+NAVY = "#21295C"
+DEEP_BLUE = "#065A82"
+TEAL = "#1C7293"
+SLATE = "#9EB3C2"
+ORANGE = "#E8833A"
+INK = "#1A2238"
+MUTED = "#64748B"
+BG_SOFT = "#F4F7F9"
+GRID = "#E2E8F0"
+FONT_STACK = ("-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, "
+              "'Helvetica Neue', Arial, sans-serif")
+
+# Sequential scales derived from the palette, reused across charts.
+TEAL_SCALE = [BG_SOFT, SLATE, TEAL, NAVY]
+ORANGE_SCALE = ["#FFF4EC", "#F3B68A", ORANGE, "#B85F1F"]
+CAUSE_COLORS = [NAVY, TEAL, ORANGE, DEEP_BLUE, SLATE, "#5C7A99", "#C9784F", "#3B4A7A"]
+
+
+def style_fig(fig):
+    """Apply shared font, gridline, and background styling to a Plotly figure."""
+    fig.update_layout(
+        font=dict(family=FONT_STACK, color=INK, size=12),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(gridcolor=GRID, zerolinecolor=GRID),
+        yaxis=dict(gridcolor=GRID, zerolinecolor=GRID),
+    )
+    return fig
+
+
+st.markdown(f"""
 <style>
-    .main-header { font-size: 2.2rem; font-weight: 700; color: #0f172a; }
-    .alert-high { background: #fee2e2; border-left: 4px solid #dc2626; padding: 1rem; border-radius: 8px; }
-    .alert-med { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 8px; }
-    .alert-low { background: #d1fae5; border-left: 4px solid #10b981; padding: 1rem; border-radius: 8px; }
-    .rec-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 1rem; border-radius: 10px; margin-bottom: 0.8rem; }
-    .model-badge { background: #ecfdf5; border: 1px solid #10b981; color: #065f46;
-        padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
-    .stTabs [data-baseweb="tab"] { background: #f1f5f9; border-radius: 8px 8px 0 0; padding: 8px 20px; font-weight: 600; }
+    html, body, [class*="css"] {{ font-family: {FONT_STACK}; }}
+    .main-header {{ font-size: 2.3rem; font-weight: 700; color: {NAVY}; letter-spacing: -0.02em; }}
+    h2, h3 {{ color: {NAVY}; }}
+    .stCaption, [data-testid="stCaptionContainer"] {{ color: {MUTED} !important; }}
+
+    .alert-high {{ background: #FCEEE6; border-left: 4px solid {ORANGE}; padding: 1rem; border-radius: 10px; }}
+    .alert-med {{ background: #FBF3E8; border-left: 4px solid #C9914A; padding: 1rem; border-radius: 10px; }}
+    .alert-low {{ background: #EAF3EF; border-left: 4px solid #3E8E6E; padding: 1rem; border-radius: 10px; }}
+    .rec-card {{ background: #FFFFFF; border: 1px solid {GRID}; padding: 1.1rem; border-radius: 12px;
+        margin-bottom: 0.8rem; box-shadow: 0 1px 3px rgba(33,41,92,0.07); }}
+    .model-badge {{ background: #EAF2F5; border: 1px solid {TEAL}; color: {DEEP_BLUE};
+        padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; }}
+
+    .stTabs [data-baseweb="tab"] {{ background: {BG_SOFT}; border-radius: 8px 8px 0 0; padding: 8px 20px; font-weight: 600; color: {MUTED}; }}
+    .stTabs [aria-selected="true"] {{ background: #FFFFFF; color: {NAVY}; box-shadow: inset 0 -2px 0 {TEAL}; }}
+
+    [data-testid="stMetricValue"] {{ color: {NAVY}; }}
+    [data-testid="stMetricLabel"] {{ color: {MUTED}; }}
+
+    [data-testid="stSidebar"] {{ background: {BG_SOFT}; }}
+    [data-testid="stSidebar"] [role="radiogroup"] label {{
+        background: #FFFFFF; border: 1px solid {GRID}; border-radius: 8px;
+        padding: 0.45rem 0.8rem; margin-bottom: 0.35rem; width: 100%; color: {INK};
+    }}
+
+    .stButton button[kind="primary"] {{ background: {TEAL}; border-color: {TEAL}; }}
+    .stButton button[kind="primary"]:hover {{ background: {DEEP_BLUE}; border-color: {DEEP_BLUE}; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -139,20 +189,29 @@ df = load_data()
 models = load_models()
 metrics = load_metrics()
 
-st.sidebar.markdown("## 🛡️ EventShield")
+st.sidebar.markdown(
+    f"""<div style="padding:0.4rem 0 0.8rem 0;">
+        <span style="font-size:1.5rem;font-weight:700;color:{NAVY};">🛡️ EventShield</span>
+    </div>""", unsafe_allow_html=True)
 st.sidebar.caption("AI-Powered Event Traffic Management")
 page = st.sidebar.radio("Navigate", [
     "📊 Dashboard", "🔮 Impact Predictor", "📡 Hotspot Forecast",
     "👮 Resource Planner", "📈 Analytics", "🧪 Model Card"
 ], label_visibility="collapsed")
 st.sidebar.markdown("---")
-st.sidebar.markdown(f"**Data:** {len(df):,} Bengaluru events")
-st.sidebar.markdown("**Period:** Nov 2023 – Apr 2024")
-st.sidebar.markdown("**Source:** ASTRAM / BTP")
+st.sidebar.markdown(
+    f"""<div style="font-size:0.85rem;line-height:1.6;">
+        <strong style="color:{NAVY};">Data:</strong> {len(df):,} Bengaluru events<br>
+        <strong style="color:{NAVY};">Period:</strong> Nov 2023 – Apr 2024<br>
+        <strong style="color:{NAVY};">Source:</strong> ASTRAM / BTP
+    </div>""", unsafe_allow_html=True)
 
 
 if page == "📊 Dashboard":
-    st.markdown('<h1 class="main-header">🛡️ EventShield Dashboard</h1>', unsafe_allow_html=True)
+    st.markdown(
+        f"""<div style="border-bottom:3px solid {TEAL};padding-bottom:0.8rem;margin-bottom:0.4rem;">
+            <h1 class="main-header" style="margin-bottom:0.2rem;">🛡️ EventShield Dashboard</h1>
+        </div>""", unsafe_allow_html=True)
     st.caption("Operational intelligence for Bengaluru event-driven congestion")
     c1, c2, c3, c4, c5 = st.columns(5)
     c1.metric("Total Events", f"{len(df):,}")
@@ -169,9 +228,11 @@ if page == "📊 Dashboard":
         mdf = df[df['event_cause'].isin(causes)] if causes else df
         fig = px.scatter_mapbox(mdf.head(2000), lat='latitude', lon='longitude',
                                 color='event_cause', zoom=10.5,
+                                color_discrete_sequence=CAUSE_COLORS,
                                 center={"lat": 12.97, "lon": 77.59},
                                 mapbox_style="carto-positron", height=520,
                                 hover_data=['address', 'priority', 'corridor'])
+        style_fig(fig)
         fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), legend=dict(orientation="h", y=-0.08))
         st.plotly_chart(fig, use_container_width=True)
     with col_feed:
@@ -220,30 +281,31 @@ elif page == "🔮 Impact Predictor":
             with m1:
                 lp = p['long_duration_prob']
                 lvl = "Likely" if lp > 0.5 else "Unlikely"
-                clr = "#dc2626" if lp > 0.5 else "#10b981"
+                clr = ORANGE if lp > 0.5 else "#3E8E6E"
                 st.markdown(f"""<div style="background:{clr}15;border:2px solid {clr};
                     border-radius:12px;padding:1.2rem;text-align:center;">
-                    <p style="margin:0;color:#64748b;font-size:0.85rem;">PROLONGED (&gt;2h)</p>
+                    <p style="margin:0;color:{MUTED};font-size:0.85rem;">PROLONGED (&gt;2h)</p>
                     <h2 style="margin:0;color:{clr};">{lp:.0%}</h2>
                     <p style="margin:0;color:{clr};font-weight:600;">{lvl}</p></div>""",
                     unsafe_allow_html=True)
             with m2:
                 hp = p['high_impact_prob']
                 lvl = "High Impact" if hp > 0.5 else "Routine"
-                clr = "#ea580c" if hp > 0.5 else "#10b981"
+                clr = ORANGE if hp > 0.5 else "#3E8E6E"
                 st.markdown(f"""<div style="background:{clr}15;border:2px solid {clr};
                     border-radius:12px;padding:1.2rem;text-align:center;">
-                    <p style="margin:0;color:#64748b;font-size:0.85rem;">IMPACT LEVEL</p>
+                    <p style="margin:0;color:{MUTED};font-size:0.85rem;">IMPACT LEVEL</p>
                     <h2 style="margin:0;color:{clr};">{hp:.0%}</h2>
                     <p style="margin:0;color:{clr};font-weight:600;">{lvl}</p></div>""",
                     unsafe_allow_html=True)
             fig = go.Figure(go.Indicator(
                 mode="gauge+number", value=(0.5 * hp + 0.5 * lp) * 100,
                 title={'text': "Combined Impact Index"},
-                gauge={'axis': {'range': [0, 100]}, 'bar': {'color': "#7c3aed"},
-                       'steps': [{'range': [0, 30], 'color': '#d1fae5'},
-                                 {'range': [30, 60], 'color': '#fef3c7'},
-                                 {'range': [60, 100], 'color': '#fee2e2'}]}))
+                gauge={'axis': {'range': [0, 100]}, 'bar': {'color': TEAL},
+                       'steps': [{'range': [0, 30], 'color': '#EAF3EF'},
+                                 {'range': [30, 60], 'color': '#FBF3E8'},
+                                 {'range': [60, 100], 'color': '#FCEEE6'}]}))
+            style_fig(fig)
             fig.update_layout(height=240, margin=dict(l=20, r=20, t=50, b=20))
             st.plotly_chart(fig, use_container_width=True)
             st.session_state['pred'] = {'event_cause': ec, 'corridor': corr,
@@ -283,16 +345,18 @@ elif page == "📡 Hotspot Forecast":
     with c2:
         st.subheader("🔥 Predicted Hotspot Map")
         fig = px.scatter_mapbox(fc, lat='lat', lon='lon', size='predicted_events',
-                                color='predicted_events', color_continuous_scale='YlOrRd',
+                                color='predicted_events', color_continuous_scale=ORANGE_SCALE,
                                 size_max=25, zoom=10, hover_name='station',
                                 center={"lat": 12.97, "lon": 77.59},
                                 mapbox_style="carto-positron", height=400)
+        style_fig(fig)
         fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
         st.plotly_chart(fig, use_container_width=True)
     st.subheader("📊 Top 15 Predicted Hotspots")
     top = fc.head(15)
     fig2 = px.bar(top, x='predicted_events', y='station', orientation='h',
-                  color='predicted_events', color_continuous_scale='OrRd')
+                  color='predicted_events', color_continuous_scale=ORANGE_SCALE)
+    style_fig(fig2)
     fig2.update_layout(height=400, showlegend=False, yaxis={'autorange': 'reversed'})
     st.plotly_chart(fig2, use_container_width=True)
     st.caption("Stations with the highest predicted load should receive pre-positioned patrol units for this window.")
@@ -342,51 +406,64 @@ elif page == "📈 Analytics":
     with t1:
         st.subheader("Events by Hour")
         h = df.groupby('hour').size().reset_index(name='count')
-        st.plotly_chart(px.bar(h, x='hour', y='count', color='count',
-                        color_continuous_scale='YlOrRd').update_layout(height=320, showlegend=False),
-                        use_container_width=True)
+        fig_h = px.bar(h, x='hour', y='count', color='count', color_continuous_scale=TEAL_SCALE)
+        style_fig(fig_h)
+        fig_h.update_layout(height=320, showlegend=False)
+        st.plotly_chart(fig_h, use_container_width=True)
         st.subheader("Heatmap: Hour × Day")
         hd = df.groupby(['dow', 'hour']).size().reset_index(name='count')
         piv = hd.pivot(index='dow', columns='hour', values='count').fillna(0)
         piv.index = [dow_map[i] for i in piv.index]
-        st.plotly_chart(px.imshow(piv, color_continuous_scale='YlOrRd', aspect='auto',
-                        labels=dict(x="Hour", y="Day", color="Events")).update_layout(height=300),
-                        use_container_width=True)
+        fig_hd = px.imshow(piv, color_continuous_scale=TEAL_SCALE, aspect='auto',
+                           labels=dict(x="Hour", y="Day", color="Events"))
+        style_fig(fig_hd)
+        fig_hd.update_layout(height=300)
+        st.plotly_chart(fig_hd, use_container_width=True)
     with t2:
         st.subheader("Event Density Hotspots")
-        st.plotly_chart(px.density_mapbox(df, lat='latitude', lon='longitude', radius=12,
+        fig_density = px.density_mapbox(df, lat='latitude', lon='longitude', radius=12,
                         zoom=10.5, center={"lat": 12.97, "lon": 77.59},
-                        mapbox_style="carto-positron", color_continuous_scale='YlOrRd',
-                        height=550).update_layout(margin=dict(l=0, r=0, t=0, b=0)),
-                        use_container_width=True)
+                        mapbox_style="carto-positron", color_continuous_scale=ORANGE_SCALE,
+                        height=550)
+        style_fig(fig_density)
+        fig_density.update_layout(margin=dict(l=0, r=0, t=0, b=0))
+        st.plotly_chart(fig_density, use_container_width=True)
         st.subheader("Top Police Stations")
         ps = df['police_station'].value_counts().head(10).reset_index()
         ps.columns = ['station', 'count']
-        st.plotly_chart(px.bar(ps, x='count', y='station', orientation='h', color='count',
-                        color_continuous_scale='Reds').update_layout(height=350, showlegend=False,
-                        yaxis={'autorange': 'reversed'}), use_container_width=True)
+        fig_ps = px.bar(ps, x='count', y='station', orientation='h', color='count',
+                        color_continuous_scale=ORANGE_SCALE)
+        style_fig(fig_ps)
+        fig_ps.update_layout(height=350, showlegend=False, yaxis={'autorange': 'reversed'})
+        st.plotly_chart(fig_ps, use_container_width=True)
     with t3:
         st.subheader("Event Cause Breakdown")
         cd2 = df['event_cause'].value_counts().reset_index()
         cd2.columns = ['cause', 'count']
-        st.plotly_chart(px.treemap(cd2, path=['cause'], values='count', color='count',
-                        color_continuous_scale='RdYlBu_r').update_layout(height=400),
-                        use_container_width=True)
+        fig_tree = px.treemap(cd2, path=['cause'], values='count', color='count',
+                        color_continuous_scale=TEAL_SCALE)
+        style_fig(fig_tree)
+        fig_tree.update_layout(height=400)
+        st.plotly_chart(fig_tree, use_container_width=True)
         st.subheader("Road Closure Rate by Cause")
         rc2 = df.groupby('event_cause').agg(total=('id', 'count'),
              cl=('requires_road_closure', 'sum')).reset_index()
         rc2['rate'] = rc2['cl'] / rc2['total']
         rc2 = rc2.sort_values('rate')
-        st.plotly_chart(px.bar(rc2, x='rate', y='event_cause', orientation='h', color='rate',
-                        color_continuous_scale='OrRd').update_layout(height=450, showlegend=False,
-                        xaxis_tickformat='.0%'), use_container_width=True)
+        fig_rc2 = px.bar(rc2, x='rate', y='event_cause', orientation='h', color='rate',
+                        color_continuous_scale=ORANGE_SCALE)
+        style_fig(fig_rc2)
+        fig_rc2.update_layout(height=450, showlegend=False, xaxis_tickformat='.0%')
+        st.plotly_chart(fig_rc2, use_container_width=True)
     with t4:
         st.subheader("Events by Corridor")
         co = df['corridor'].value_counts().head(15).reset_index()
         co.columns = ['corridor', 'count']
-        st.plotly_chart(px.bar(co, x='corridor', y='count', color='count',
-                        color_continuous_scale='Viridis').update_layout(height=350,
-                        showlegend=False, xaxis_tickangle=-45), use_container_width=True)
+        fig_co = px.bar(co, x='corridor', y='count', color='count',
+                        color_continuous_scale=TEAL_SCALE)
+        style_fig(fig_co)
+        fig_co.update_layout(height=350, showlegend=False, xaxis_tickangle=-45)
+        st.plotly_chart(fig_co, use_container_width=True)
 
 
 elif page == "🧪 Model Card":
@@ -427,9 +504,11 @@ elif page == "🧪 Model Card":
     st.subheader("Feature Importance — High-Impact Classifier")
     fi = metrics['high_impact']['feature_importance']
     fi_df = pd.DataFrame(fi, columns=['feature', 'importance']).sort_values('importance')
-    st.plotly_chart(px.bar(fi_df, x='importance', y='feature', orientation='h', color='importance',
-                    color_continuous_scale='Purples').update_layout(height=350, showlegend=False),
-                    use_container_width=True)
+    fig_fi = px.bar(fi_df, x='importance', y='feature', orientation='h', color='importance',
+                    color_continuous_scale=TEAL_SCALE)
+    style_fig(fig_fi)
+    fig_fi.update_layout(height=350, showlegend=False)
+    st.plotly_chart(fig_fi, use_container_width=True)
     st.markdown("---")
     st.subheader("⚠️ Known Limitations")
     st.markdown("""We report these openly rather than overstate the system's reach:
@@ -447,6 +526,6 @@ elif page == "🧪 Model Card":
 
 
 st.markdown("---")
-st.markdown("""<div style="text-align:center;color:#94a3b8;font-size:0.8rem;">
+st.markdown(f"""<div style="text-align:center;color:{MUTED};font-size:0.8rem;">
     EventShield v2.0 | Gridlock Hackathon 2.0 | Validated ML · Honest metrics
     <br>Built with Streamlit, Plotly, scikit-learn</div>""", unsafe_allow_html=True)
