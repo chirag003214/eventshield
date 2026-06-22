@@ -22,9 +22,9 @@ from sklearn.preprocessing import LabelEncoder
 warnings.filterwarnings('ignore')
 
 
-def main():
-    """Train all three EventShield models and write models.pkl + metrics.json."""
-    df = pd.read_csv('event_data.csv')
+def build_models(df):
+    """Train all three EventShield models in-process and return (models, metrics)."""
+    df = df.copy()
     df['start_dt'] = pd.to_datetime(df['start_datetime'], errors='coerce', utc=True)
     df['closed_dt'] = pd.to_datetime(df['closed_datetime'], errors='coerce', utc=True)
     df['hour'] = df['start_dt'].dt.hour
@@ -114,10 +114,16 @@ def main():
         'improvement_pct': round((1 - forecast_mae / base_mae) * 100, 1),
         'n': int(len(y_count))}
 
-    # ── Persist ──
     models = {'clf_long': clf_long, 'clf_hi': clf_hi, 'reg_count': reg_count,
               'le_cause': le_cause, 'le_corr': le_corr, 'le_stat': le_stat,
               'le_veh': le_veh, 'le_ps': le_ps, 'le_hb': le_hb, 'feats': feats}
+    return models, metrics
+
+
+def main():
+    """CLI entrypoint: train models and persist models.pkl + metrics.json for offline inspection."""
+    df = pd.read_csv('event_data.csv')
+    models, metrics = build_models(df)
     pickle.dump(models, open('models.pkl', 'wb'))
     json.dump(metrics, open('metrics.json', 'w'), indent=2)
 

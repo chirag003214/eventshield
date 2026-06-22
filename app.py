@@ -13,8 +13,8 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
-import pickle, json
 import warnings
+from train_models import build_models
 warnings.filterwarnings('ignore')
 
 st.set_page_config(page_title="EventShield — Traffic Intelligence",
@@ -103,13 +103,9 @@ def load_data():
 
 
 @st.cache_resource
-def load_models():
-    return pickle.load(open("models.pkl", "rb"))
-
-
-@st.cache_data
-def load_metrics():
-    return json.load(open("metrics.json"))
+def load_models_and_metrics():
+    raw = pd.read_csv("event_data.csv")
+    return build_models(raw)
 
 
 def encode_safe(le, value, default=0):
@@ -186,8 +182,7 @@ def generate_resource_plan(event_cause, long_prob, high_prob, lat, lon,
 
 
 df = load_data()
-models = load_models()
-metrics = load_metrics()
+models, metrics = load_models_and_metrics()
 
 st.sidebar.markdown(
     f"""<div style="padding:0.4rem 0 0.8rem 0;">
