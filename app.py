@@ -131,7 +131,7 @@ def forecast_events(models, police_station, dow, hour_bucket):
     ps = encode_safe(models['le_ps'], police_station)
     hb = encode_safe(models['le_hb'], hour_bucket)
     X = np.array([[ps, dow, hb]])
-    return float(np.expm1(models['reg_count'].predict(X)[0]))
+    return max(0.0, float(np.expm1(models['reg_count'].predict(X)[0])))
 
 
 def generate_resource_plan(event_cause, long_prob, high_prob, lat, lon,
